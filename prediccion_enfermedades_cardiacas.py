@@ -1,14 +1,14 @@
-import pandas as pd
-import numpy as np
-import joblib
-from sklearn.model_selection import train_test_split, StratifiedKFold, cross_val_score
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import classification_report, confusion_matrix, accuracy_score, roc_auc_score
-from sklearn.preprocessing import StandardScaler
-from sklearn.decomposition import PCA
-from imblearn.over_sampling import SMOTE
-import warnings
-warnings.filterwarnings("ignore")
+import pandas as pd  # Importa la librería pandas, utilizada para manipulación y análisis de datos estructurados (DataFrames).
+import numpy as np  # Importa numpy, una librería para cálculos numéricos y operaciones con arrays.
+import joblib  # Importa joblib, útil para guardar y cargar modelos entrenados u otros objetos grandes en Python.
+from sklearn.model_selection import train_test_split, StratifiedKFold, cross_val_score  # Importa funciones de Scikit-learn para dividir datos y validar modelos.
+from sklearn.ensemble import RandomForestClassifier  # Importa el clasificador Random Forest, un algoritmo de aprendizaje automático basado en árboles.
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score, roc_auc_score  # Importa métricas para evaluar el rendimiento del modelo.
+from sklearn.preprocessing import StandardScaler  # Importa StandardScaler para normalizar los datos (media 0, varianza 1).
+from sklearn.decomposition import PCA  # Importa Análisis de Componentes Principales para reducir la dimensionalidad de los datos.
+from imblearn.over_sampling import SMOTE  # Importa SMOTE, una técnica de sobremuestreo para balancear clases desbalanceadas.
+import warnings  # Importa la librería warnings para controlar la aparición de advertencias en el programa.
+warnings.filterwarnings("ignore")  # Desactiva la visualización de advertencias para evitar que aparezcan mensajes molestos en la salida.
 
 # 1. Cargar dataset
 df = pd.read_csv('heart_attack_desease.csv')
