@@ -8,7 +8,7 @@ from sklearn.linear_model import LogisticRegression  # Importa el modelo de Regr
 from sklearn.neighbors import KNeighborsClassifier  # Importa el clasificador k-vecinos más cercanos del módulo neighbors
 from sklearn.metrics import ( # Importa varias métricas de evaluación de modelos desde sklearn.metrics
     classification_report, confusion_matrix, accuracy_score, 
-    roc_auc_score, roc_curve, precision_recall_fscore_support
+    roc_auc_score, roc_curve
 )  
 from sklearn.preprocessing import StandardScaler  # Importa el escalador estándar para normalizar características (media 0, desviación estándar 1)
 import seaborn as sns                        # Importa la biblioteca seaborn, útil para gráficos estadísticos, con alias 'sns'
