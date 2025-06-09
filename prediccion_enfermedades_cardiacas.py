@@ -46,7 +46,7 @@ log_pred = log_best.predict(X_test)                     # Realiza predicciones d
 log_proba = log_best.predict_proba(X_test)[:, 1]        # Calcula las probabilidades predichas de la clase positiva (1) para métricas como ROC AUC
 
 # KNN
-knn_params = {'n_neighbors': list(range(1, 31))}        # Define una grilla de valores de vecinos (de 1 a 30) para probar en el clasificador KNN
+knn_params = {'n_neighbors': list(range(1, 10))}        # Define una grilla de valores de vecinos (de 1 a 30) para probar en el clasificador KNN
 knn_model = GridSearchCV(KNeighborsClassifier(), knn_params, cv=5)  # Crea un GridSearchCV para buscar el mejor número de vecinos usando validación cruzada
 knn_model.fit(X_train, y_train)                         # Entrena el modelo KNN con los mejores hiperparámetros
 knn_best = knn_model.best_estimator_                    # Extrae el mejor modelo encontrado por GridSearch
