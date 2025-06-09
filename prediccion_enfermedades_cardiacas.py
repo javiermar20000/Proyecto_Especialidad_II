@@ -54,7 +54,7 @@ knn_pred = knn_best.predict(X_test)                     # Predice las clases del
 knn_proba = knn_best.predict_proba(X_test)[:, 1]        # Calcula las probabilidades predichas de la clase positiva (1)
 
 # Random Forest
-rf_params = {'max_depth': list(range(1, 21))}           # Define una grilla de valores para la profundidad máxima del árbol (1 a 20)
+rf_params = {'max_depth': list(range(1, 10))}           # Define una grilla de valores para la profundidad máxima del árbol (1 a 20)
 rf_model = GridSearchCV(RandomForestClassifier(random_state=42), rf_params, cv=5)  # Crea un GridSearchCV para ajustar el clasificador Random Forest buscando la mejor profundidad
 rf_model.fit(X_train, y_train)                          # Entrena el modelo Random Forest con los mejores hiperparámetros
 rf_best = rf_model.best_estimator_                      # Extrae el mejor modelo Random Forest encontrado
@@ -62,7 +62,7 @@ rf_pred = rf_best.predict(X_test)                       # Predice las clases del
 rf_proba = rf_best.predict_proba(X_test)[:, 1]          # Calcula las probabilidades de la clase positiva (1) para métricas de evaluación
 
 # 7. Evaluar múltiples configuraciones
-def top_n_modelos(modelo_grid, nombre, X_train, y_train, X_test, y_test, n=3):
+def top_n_modelos(modelo_grid, nombre, X_train, y_train, X_test, y_test, n=4):
     results = modelo_grid.cv_results_                   # Obtiene todos los resultados de la validación cruzada del GridSearchCV
     sorted_indices = np.argsort(results['rank_test_score'])[:n]  # Ordena los resultados por el ranking del score (menor es mejor) y selecciona los índices de las top-n configuraciones
     print(f"\n\n Top {n} resultados para {nombre}:")    # Imprime el encabezado para los mejores modelos de ese tipo
@@ -95,7 +95,7 @@ def top_n_modelos(modelo_grid, nombre, X_train, y_train, X_test, y_test, n=3):
 # Evaluar los 3 mejores resultados de cada modelo
 top_n_modelos(log_model, "Regresión Logística", X_train, y_train, X_test, y_test, n=3)  # Evalúa las 3 mejores configuraciones del modelo de regresión logística
 top_n_modelos(knn_model, "KNN", X_train, y_train, X_test, y_test, n=3)  # Evalúa las 3 mejores configuraciones del modelo KNN
-top_n_modelos(rf_model, "Random Forest", X_train, y_train, X_test, y_test, n=3)  # Evalúa las 3 mejores configuraciones del modelo Random Forest
+top_n_modelos(rf_model, "Random Forest", X_train, y_train, X_test, y_test, n=4)  # Evalúa las 3 mejores configuraciones del modelo Random Forest
 
 
 # 8. Graficar curvas ROC
