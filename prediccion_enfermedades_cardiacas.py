@@ -249,17 +249,26 @@ plt.grid(True) # Activa la cuadrícula
 plt.tight_layout() # Ajusta el layout
 plt.show() # Muestra el gráfico
 
-# Logistic Regression
+  
+# Regresión Logística
+# Para la gráfica de precisión vs valores de C
+accuracies_test = []
+for c in log_params['C']:
+    model = LogisticRegression(C=c, max_iter=1000)
+    model.fit(X_train, y_train)
+    acc = accuracy_score(y_test, model.predict(X_test))
+    accuracies_test.append(acc)
+
+# Luego graficas esos valores
 plt.figure()
-# Grafica la precisión frente al valor de C (parámetro de regularización)
-plt.plot(log_params['C'], log_model.cv_results_['mean_test_score'], marker='o', color='red')
-plt.xscale('log') # Escala logarítmica en el eje X (ya que C varía exponencialmente)
-plt.title("Precisión RL vs C") # Título del gráfico
-plt.xlabel("C (log)") # Etiqueta X indicando escala log
-plt.ylabel("Precisión") # Etiqueta del eje Y
-plt.grid(True) # Activa la cuadrícula
-plt.tight_layout() # Ajusta el layout
-plt.show() # Muestra el gráfico
+plt.plot(log_params['C'], accuracies_test, marker='o', color='red')
+plt.xscale('log')
+plt.title("Precisión Regresión Logística vs C")
+plt.xlabel("Valores de C (log)")
+plt.ylabel("Precisión")
+plt.grid(True)
+plt.tight_layout()
+plt.show()
 
 # 11. Guardar mejor modelo y scaler
 joblib.dump(rf_best, 'rf_model.pkl')  # Guarda el mejor modelo de Random Forest en un archivo .pkl
