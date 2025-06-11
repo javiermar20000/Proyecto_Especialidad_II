@@ -8,7 +8,7 @@ from sklearn.linear_model import LogisticRegression  # Importa el modelo de Regr
 from sklearn.neighbors import KNeighborsClassifier  # Importa el clasificador k-vecinos más cercanos del módulo neighbors
 from sklearn.metrics import ( # Importa varias métricas de evaluación de modelos desde sklearn.metrics
     classification_report, confusion_matrix, accuracy_score, 
-    roc_auc_score, roc_curve
+    roc_auc_score, roc_curve, auc
 )  
 from sklearn.preprocessing import StandardScaler  # Importa el escalador estándar para normalizar características (media 0, desviación estándar 1)
 import seaborn as sns                        # Importa la biblioteca seaborn, útil para gráficos estadísticos, con alias 'sns'
@@ -98,7 +98,31 @@ top_n_modelos(knn_model, "KNN", X_train, y_train, X_test, y_test, n=3)  # Evalú
 top_n_modelos(rf_model, "Random Forest", X_train, y_train, X_test, y_test, n=4)  # Evalúa las 4 mejores configuraciones del modelo Random Forest
 
 
-# 8. Graficar curvas ROC
+log_proba_0 = log_best.predict_proba(X_test)[:, 0]
+knn_proba_0 = knn_best.predict_proba(X_test)[:, 0]
+rf_proba_0 = rf_best.predict_proba(X_test)[:, 0]
+
+# Invertimos las etiquetas: ahora la clase "0" es la positiva
+y_test_invertido = 1 - y_test
+
+# 8. Graficar curvas ROC para la clase 0
+plt.figure(figsize=(8, 6))  # Crea una figura nueva con tamaño 8x6 pulgadas
+# Itera sobre cada modelo junto con sus probabilidades de clase positiva (y_proba)
+for nombre, y_proba in zip(["Logistic Regression", "KNN", "Random Forest"], [log_proba_0, knn_proba_0, rf_proba_0]):  
+
+    fpr, tpr, _ = roc_curve(y_test_invertido, y_proba)  # Calcula los valores de FPR (False Positive Rate) y TPR (True Positive Rate) para la curva ROC
+    plt.plot(fpr, tpr, label=f'{nombre} (AUC: {roc_auc_score(y_test_invertido, y_proba):.2f})')  # Dibuja la curva ROC para ese modelo e incluye en la leyenda su AUC correspondiente
+
+plt.plot([0, 1], [0, 1], 'k--')  # Dibuja una línea diagonal como referencia (clasificador aleatorio)
+plt.xlabel('FPR (Clase 0)')  # Etiqueta para el eje X: Tasa de Falsos Positivos
+plt.ylabel('TPR (Clase 0)')  # Etiqueta para el eje Y: Tasa de Verdaderos Positivos
+plt.title('Curvas ROC [Clase 0]')  # Título del gráfico
+plt.legend()  # Muestra la leyenda con los nombres de los modelos y sus AUC
+plt.grid(True)  # Agrega una cuadrícula al gráfico
+plt.tight_layout()  # Ajusta el diseño para evitar que se superpongan elementos
+plt.show()  # Muestra el gráfico en pantalla
+
+# 8.1. Graficar curvas ROC para la clase 1
 plt.figure(figsize=(8, 6))  # Crea una figura nueva con tamaño 8x6 pulgadas
 # Itera sobre cada modelo junto con sus probabilidades de clase positiva (y_proba)
 for nombre, y_proba in zip(["Logistic Regression", "KNN", "Random Forest"], [log_proba, knn_proba, rf_proba]):  
@@ -107,13 +131,85 @@ for nombre, y_proba in zip(["Logistic Regression", "KNN", "Random Forest"], [log
     plt.plot(fpr, tpr, label=f'{nombre} (AUC: {roc_auc_score(y_test, y_proba):.2f})')  # Dibuja la curva ROC para ese modelo e incluye en la leyenda su AUC correspondiente
 
 plt.plot([0, 1], [0, 1], 'k--')  # Dibuja una línea diagonal como referencia (clasificador aleatorio)
-plt.xlabel('FPR')  # Etiqueta para el eje X: Tasa de Falsos Positivos
-plt.ylabel('TPR')  # Etiqueta para el eje Y: Tasa de Verdaderos Positivos
-plt.title('Curvas ROC')  # Título del gráfico
+plt.xlabel('FPR (Clase 1)')  # Etiqueta para el eje X: Tasa de Falsos Positivos
+plt.ylabel('TPR (Clase 1)')  # Etiqueta para el eje Y: Tasa de Verdaderos Positivos
+plt.title('Curvas ROC [Clase 1]')  # Título del gráfico
 plt.legend()  # Muestra la leyenda con los nombres de los modelos y sus AUC
 plt.grid(True)  # Agrega una cuadrícula al gráfico
 plt.tight_layout()  # Ajusta el diseño para evitar que se superpongan elementos
 plt.show()  # Muestra el gráfico en pantalla
+
+# 8.2 Curvas ROC para discriminar entre clases de los mejores modelos encontrados (KNN)
+# Calcular curvas ROC
+fpr_knn, tpr_knn, _ = roc_curve(y_test, knn_proba)
+roc_auc_knn = auc(fpr_knn, tpr_knn)
+
+fpr_knn_0, tpr_knn_0, _ = roc_curve(y_test_invertido, knn_proba_0)
+roc_auc_knn_0 = auc(fpr_knn_0, tpr_knn_0)
+
+# Plot
+plt.figure(figsize=(8, 6))
+plt.plot(fpr_knn, tpr_knn, label=f'Clase 1 (AUC = {roc_auc_knn:.2f})')
+plt.plot(fpr_knn_0, tpr_knn_0, label=f'Clase 0 (AUC = {roc_auc_knn_0:.2f})')
+
+# Diagonal
+plt.plot([0, 1], [0, 1], 'k--')
+
+plt.xlabel('FPR')
+plt.ylabel('TPR')
+plt.title('Curvas ROC del mejor modelo KNN')
+plt.legend(loc='lower right')
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+
+# 8.3 Curvas ROC para discriminar entre clases de los mejores modelos encontrados (Random Forest)
+# Calcular curvas ROC
+fpr_rf, tpr_rf, _ = roc_curve(y_test, rf_proba)
+roc_auc_rf = auc(fpr_rf, tpr_rf)
+
+fpr_rf_0, tpr_rf_0, _ = roc_curve(y_test_invertido, rf_proba_0)
+roc_auc_rf_0 = auc(fpr_rf_0, tpr_rf_0)
+
+# Plot
+plt.figure(figsize=(8, 6))
+plt.plot(fpr_rf, tpr_rf, label=f'Clase 1 (AUC = {roc_auc_rf:.2f})')
+plt.plot(fpr_rf_0, tpr_rf_0, label=f'Clase 0 (AUC = {roc_auc_rf_0:.2f})')
+
+# Diagonal
+plt.plot([0, 1], [0, 1], 'k--')
+
+plt.xlabel('FPR')
+plt.ylabel('TPR')
+plt.title('Curvas ROC del mejor modelo Random Forest')
+plt.legend(loc='lower right')
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+
+# 8.4 Curvas ROC para discriminar entre clases de los mejores modelos encontrados (Regresión logistica)
+# Calcular curvas ROC
+fpr_log, tpr_log, _ = roc_curve(y_test, log_proba)
+roc_auc_log = auc(fpr_log, tpr_log)
+
+fpr_log_0, tpr_log_0, _ = roc_curve(y_test_invertido, log_proba_0)
+roc_auc_log_0 = auc(fpr_log_0, tpr_log_0)
+
+# Plot
+plt.figure(figsize=(8, 6))
+plt.plot(fpr_log, tpr_log, label=f'Clase 1 (AUC = {roc_auc_log:.2f})')
+plt.plot(fpr_log_0, tpr_log_0, label=f'Clase 0 (AUC = {roc_auc_log_0:.2f})')
+
+# Diagonal
+plt.plot([0, 1], [0, 1], 'k--')
+
+plt.xlabel('FPR')
+plt.ylabel('TPR')
+plt.title('Curvas ROC del mejor modelo Regresión Lineal')
+plt.legend(loc='lower right')
+plt.grid(True)
+plt.tight_layout()
+plt.show()
 
 # 9. Matrices de confusión heatmap
 # Crea una lista de tuplas con el nombre del modelo y sus predicciones en el test set
