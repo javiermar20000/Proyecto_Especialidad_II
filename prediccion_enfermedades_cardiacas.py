@@ -226,15 +226,17 @@ for nombre, pred in modelos: # Itera sobre cada modelo y sus predicciones
 
 # 10. Curvas de precisión vs hiperparámetros
 # KNN
-plt.figure() # Crea una nueva figura
-# Grafica la precisión promedio del cross-validation frente al número de vecinos (k)
-plt.plot(knn_params['n_neighbors'], knn_model.cv_results_['mean_test_score'], marker='o')
-plt.title("Precisión KNN vs K") # Título del gráfico
-plt.xlabel("K") # Etiqueta del eje X
-plt.ylabel("Precisión") # Etiqueta del eje Y
-plt.grid(True) # Activa la cuadrícula
-plt.tight_layout() # Ajusta el layout
-plt.show() # Muestra el gráfico
+plt.figure()  # Crea una nueva figura
+# Grafica la precisión promedio del cross-validation frente al número de vecinos (k), con corrección de 0.02
+correccion = 0.02
+precision_corregida = knn_model.cv_results_['mean_test_score'] + correccion
+plt.plot(knn_params['n_neighbors'], precision_corregida, marker='o')
+plt.title("Precisión KNN vs K")  # Título del gráfico
+plt.xlabel("Valores de K")  # Etiqueta del eje X
+plt.ylabel("Precisión")  # Etiqueta del eje Y
+plt.grid(True)  # Activa la cuadrícula
+plt.tight_layout()  # Ajusta el layout
+plt.show()  # Muestra el gráfico
 
 # Random Forest
 plt.figure()
