@@ -92,9 +92,9 @@ def top_n_modelos(modelo_grid, nombre, X_train, y_train, X_test, y_test, n=4):
         print("Precisión:", accuracy_score(y_test, y_pred))  # Muestra la precisión (accuracy) del modelo
         print("AUC:", roc_auc_score(y_test, y_proba))   # Calcula y muestra el AUC (área bajo la curva ROC)
 
-# Evaluar los 3 mejores resultados de cada modelo
-top_n_modelos(log_model, "Regresión Logística", X_train, y_train, X_test, y_test, n=3)  # Evalúa las 3 mejores configuraciones del modelo de regresión logística
-top_n_modelos(knn_model, "KNN", X_train, y_train, X_test, y_test, n=3)  # Evalúa las 3 mejores configuraciones del modelo KNN
+# Evaluar los 4 mejores resultados de cada modelo
+top_n_modelos(log_model, "Regresión Logística", X_train, y_train, X_test, y_test, n=4)  # Evalúa las 4 mejores configuraciones del modelo de regresión logística
+top_n_modelos(knn_model, "KNN", X_train, y_train, X_test, y_test, n=4)  # Evalúa las 4 mejores configuraciones del modelo KNN
 top_n_modelos(rf_model, "Random Forest", X_train, y_train, X_test, y_test, n=4)  # Evalúa las 4 mejores configuraciones del modelo Random Forest
 
 
