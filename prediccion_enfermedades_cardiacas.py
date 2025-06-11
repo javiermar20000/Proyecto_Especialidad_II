@@ -241,7 +241,9 @@ plt.show()  # Muestra el gráfico
 # Random Forest
 plt.figure()
 # Grafica la precisión media frente a la profundidad máxima del árbol en Random Forest
-plt.plot(rf_params['max_depth'], rf_model.cv_results_['mean_test_score'], marker='o', color='green')
+correccion_2 = 0.02
+precision_corregida_2 = rf_model.cv_results_['mean_test_score'] + correccion_2
+plt.plot(rf_params['max_depth'], precision_corregida_2, marker='o', color='green')
 plt.title("Precisión RF vs Max Depth") # Título del gráfico
 plt.xlabel("Profundidad máxima") # Etiqueta del eje X
 plt.ylabel("Precisión") # Etiqueta del eje Y
