@@ -205,7 +205,7 @@ plt.plot([0, 1], [0, 1], 'k--')
 
 plt.xlabel('FPR')
 plt.ylabel('TPR')
-plt.title('Curvas ROC del mejor modelo Regresión Lineal')
+plt.title('Curvas ROC del mejor modelo Regresión Logística')
 plt.legend(loc='lower right')
 plt.grid(True)
 plt.tight_layout()
