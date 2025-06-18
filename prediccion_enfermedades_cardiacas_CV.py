@@ -179,7 +179,7 @@ for nombre, y_proba in zip(["Logistic Regression", "KNN", "Random Forest"], [log
 plt.plot([0, 1], [0, 1], 'k--')  # Dibuja una línea diagonal como referencia (clasificador aleatorio)
 plt.xlabel('FPR (Clase 0)')  # Etiqueta para el eje X: Tasa de Falsos Positivos
 plt.ylabel('TPR (Clase 0)')  # Etiqueta para el eje Y: Tasa de Verdaderos Positivos
-plt.title('Curvas ROC [Clase 0] - Modelos con Restricción 96%')  # Título del gráfico
+plt.title('Curvas ROC [Clase 0]')  # Título del gráfico
 plt.legend()  # Muestra la leyenda con los nombres de los modelos y sus AUC
 plt.grid(True)  # Agrega una cuadrícula al gráfico
 plt.tight_layout()  # Ajusta el diseño para evitar que se superpongan elementos
@@ -196,7 +196,7 @@ for nombre, y_proba in zip(["Logistic Regression", "KNN", "Random Forest"], [log
 plt.plot([0, 1], [0, 1], 'k--')  # Dibuja una línea diagonal como referencia (clasificador aleatorio)
 plt.xlabel('FPR (Clase 1)')  # Etiqueta para el eje X: Tasa de Falsos Positivos
 plt.ylabel('TPR (Clase 1)')  # Etiqueta para el eje Y: Tasa de Verdaderos Positivos
-plt.title('Curvas ROC [Clase 1] - Modelos con Restricción 96%')  # Título del gráfico
+plt.title('Curvas ROC [Clase 1]')  # Título del gráfico
 plt.legend()  # Muestra la leyenda con los nombres de los modelos y sus AUC
 plt.grid(True)  # Agrega una cuadrícula al gráfico
 plt.tight_layout()  # Ajusta el diseño para evitar que se superpongan elementos
