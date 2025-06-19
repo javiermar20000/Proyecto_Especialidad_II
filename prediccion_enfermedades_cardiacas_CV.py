@@ -12,6 +12,9 @@ from sklearn.metrics import ( # Importa varias métricas de evaluación de model
 )  
 from sklearn.preprocessing import StandardScaler  # Importa el escalador estándar para normalizar características (media 0, desviación estándar 1)
 import seaborn as sns                        # Importa la biblioteca seaborn, útil para gráficos estadísticos, con alias 'sns'
+from sklearn.feature_selection import SelectKBest, f_classif, RFE
+from sklearn.inspection import permutation_importance
+import pandas as pd
 import warnings                              # Importa el módulo warnings para gestionar advertencias del sistema
 warnings.filterwarnings("ignore")           # Ignora las advertencias generadas durante la ejecución del código
 
@@ -89,7 +92,7 @@ def obtener_mejor_modelo_restringido(modelo_grid, nombre, X_train, y_train, max_
 
 # KNN con restricción de precisión máxima del 96%
 knn_params = {'n_neighbors': list(range(1, 10))}        # Define una grilla de valores de vecinos (de 1 a 9) para probar en el clasificador KNN
-knn_model = GridSearchCV(KNeighborsClassifier(), knn_params, cv=5)  # Crea un GridSearchCV para buscar el mejor número de vecinos usando validación cruzada
+knn_model = GridSearchCV(KNeighborsClassifier(), knn_params, cv=30)  # Crea un GridSearchCV para buscar el mejor número de vecinos usando validación cruzada
 knn_model.fit(X_train, y_train)                         # Entrena el modelo KNN con los mejores hiperparámetros
 
 # Obtener el mejor modelo KNN que no supere 96%
@@ -99,7 +102,7 @@ knn_proba = knn_best.predict_proba(X_test)[:, 1]        # Calcula las probabilid
 
 # Random Forest con restricción de precisión máxima del 96%
 rf_params = {'max_depth': list(range(1, 10))}           # Define una grilla de valores para la profundidad máxima del árbol (1 a 9)
-rf_model = GridSearchCV(RandomForestClassifier(random_state=42), rf_params, cv=5)  # Crea un GridSearchCV para ajustar el clasificador Random Forest buscando la mejor profundidad
+rf_model = GridSearchCV(RandomForestClassifier(random_state=42), rf_params, cv=30)  # Crea un GridSearchCV para ajustar el clasificador Random Forest buscando la mejor profundidad
 rf_model.fit(X_train, y_train)                          # Entrena el modelo Random Forest con los mejores hiperparámetros
 
 # Obtener el mejor modelo Random Forest que no supere 96%
@@ -413,3 +416,207 @@ def entrada_usuario():
 
 # Descomentar para usar en consola
 # entrada_usuario()
+
+# =============================================================================
+# ANÁLISIS DE IMPORTANCIA DE CARACTERÍSTICAS
+# =============================================================================
+
+print("\n" + "="*60)
+print("📊 ANÁLISIS DE IMPORTANCIA DE CARACTERÍSTICAS")
+print("="*60)
+
+# Obtener los nombres de las características
+feature_names = X.columns.tolist()
+
+# 1. IMPORTANCIA BASADA EN RANDOM FOREST (Feature Importance)
+print("\n1️⃣ IMPORTANCIA BASADA EN RANDOM FOREST:")
+print("-" * 50)
+
+# Obtener importancias del mejor modelo Random Forest
+rf_importances = rf_best.feature_importances_
+rf_importance_df = pd.DataFrame({
+    'Característica': feature_names,
+    'Importancia': rf_importances,
+    'Porcentaje': rf_importances * 100
+}).sort_values('Importancia', ascending=False)
+
+print("Ranking de importancia (Random Forest):")
+for i, row in rf_importance_df.iterrows():
+    print(f"{row.name+1:2d}. {row['Característica']:12s} - {row['Porcentaje']:5.2f}%")
+
+# Visualizar importancias de Random Forest
+plt.figure(figsize=(10, 6))
+plt.barh(range(len(rf_importance_df)), rf_importance_df['Porcentaje'])
+plt.yticks(range(len(rf_importance_df)), rf_importance_df['Característica'])
+plt.xlabel('Importancia (%)')
+plt.title('Importancia de Características - Random Forest')
+plt.gca().invert_yaxis()
+plt.tight_layout()
+plt.show()
+
+# 2. IMPORTANCIA POR PERMUTACIÓN (más robusta)
+print("\n2️⃣ IMPORTANCIA POR PERMUTACIÓN:")
+print("-" * 50)
+
+# Calcular importancia por permutación para Random Forest
+perm_importance = permutation_importance(rf_best, X_test, y_test, 
+                                       n_repeats=10, random_state=42, 
+                                       scoring='accuracy')
+
+perm_importance_df = pd.DataFrame({
+    'Característica': feature_names,
+    'Importancia_Media': perm_importance.importances_mean,
+    'Desviación_Std': perm_importance.importances_std,
+    'Porcentaje': perm_importance.importances_mean * 100
+}).sort_values('Importancia_Media', ascending=False)
+
+print("Ranking de importancia (Permutación):")
+for i, row in perm_importance_df.iterrows():
+    print(f"{row.name+1:2d}. {row['Característica']:12s} - {row['Porcentaje']:5.2f}% (±{row['Desviación_Std']*100:.2f}%)")
+
+# Visualizar importancias por permutación
+plt.figure(figsize=(10, 6))
+plt.barh(range(len(perm_importance_df)), perm_importance_df['Porcentaje'])
+plt.yticks(range(len(perm_importance_df)), perm_importance_df['Característica'])
+plt.xlabel('Importancia (%)')
+plt.title('Importancia de Características - Permutación')
+plt.gca().invert_yaxis()
+plt.tight_layout()
+plt.show()
+
+# 3. ANÁLISIS ESTADÍSTICO UNIVARIADO (F-Score)
+print("\n3️⃣ ANÁLISIS ESTADÍSTICO (F-Score):")
+print("-" * 50)
+
+# Calcular F-scores
+selector = SelectKBest(score_func=f_classif, k='all')
+selector.fit(X_scaled, y)
+
+f_scores = selector.scores_
+f_scores_df = pd.DataFrame({
+    'Característica': feature_names,
+    'F_Score': f_scores,
+    'Porcentaje': (f_scores / f_scores.sum()) * 100
+}).sort_values('F_Score', ascending=False)
+
+print("Ranking de F-Score:")
+for i, row in f_scores_df.iterrows():
+    print(f"{row.name+1:2d}. {row['Característica']:12s} - F-Score: {row['F_Score']:6.2f} ({row['Porcentaje']:5.2f}%)")
+
+# 4. SELECCIÓN RECURSIVA DE CARACTERÍSTICAS (RFE)
+print("\n4️⃣ SELECCIÓN RECURSIVA DE CARACTERÍSTICAS (RFE):")
+print("-" * 50)
+
+# Usar RFE con Random Forest
+rfe = RFE(estimator=RandomForestClassifier(random_state=42), n_features_to_select=8)
+rfe.fit(X_scaled, y)
+
+rfe_ranking_df = pd.DataFrame({
+    'Característica': feature_names,
+    'Ranking_RFE': rfe.ranking_,
+    'Seleccionado': rfe.support_
+}).sort_values('Ranking_RFE')
+
+print("Ranking RFE (1 = más importante):")
+for i, row in rfe_ranking_df.iterrows():
+    status = "✅ SELECCIONADO" if row['Seleccionado'] else "❌ ELIMINADO"
+    print(f"{row['Ranking_RFE']:2d}. {row['Característica']:12s} - {status}")
+
+# 5. COMPARACIÓN CONSOLIDADA
+print("\n5️⃣ COMPARACIÓN CONSOLIDADA:")
+print("-" * 50)
+
+# Crear ranking promedio
+comparison_df = pd.DataFrame({
+    'Característica': feature_names,
+    'RF_Rank': rf_importance_df.reset_index()['Característica'].apply(lambda x: rf_importance_df[rf_importance_df['Característica'] == x].index[0] + 1).values,
+    'Perm_Rank': perm_importance_df.reset_index()['Característica'].apply(lambda x: perm_importance_df[perm_importance_df['Característica'] == x].index[0] + 1).values,
+    'F_Rank': f_scores_df.reset_index()['Característica'].apply(lambda x: f_scores_df[f_scores_df['Característica'] == x].index[0] + 1).values,
+    'RFE_Rank': [rfe_ranking_df[rfe_ranking_df['Característica'] == feat]['Ranking_RFE'].values[0] for feat in feature_names]
+})
+
+# Calcular ranking promedio
+comparison_df['Ranking_Promedio'] = comparison_df[['RF_Rank', 'Perm_Rank', 'F_Rank', 'RFE_Rank']].mean(axis=1)
+comparison_df = comparison_df.sort_values('Ranking_Promedio')
+
+print("Ranking consolidado (promedio de todos los métodos):")
+for i, row in comparison_df.iterrows():
+    print(f"{i+1:2d}. {row['Característica']:12s} - Promedio: {row['Ranking_Promedio']:4.1f} "
+          f"(RF:{row['RF_Rank']:2d}, Perm:{row['Perm_Rank']:2d}, F:{row['F_Rank']:2d}, RFE:{row['RFE_Rank']:2d})")
+
+# 6. ANÁLISIS DE CARACTERÍSTICAS MENOS IMPORTANTES
+print("\n6️⃣ ANÁLISIS DE CARACTERÍSTICAS POTENCIALMENTE ELIMINABLES:")
+print("-" * 50)
+
+# Características que consistentemente rankean bajo
+umbral_ranking = len(feature_names) * 0.7  # 70% hacia abajo
+
+caracteristicas_bajas = comparison_df[comparison_df['Ranking_Promedio'] > umbral_ranking]
+
+if len(caracteristicas_bajas) > 0:
+    print("Características con menor importancia consistente:")
+    for i, row in caracteristicas_bajas.iterrows():
+        print(f"⚠️  {row['Característica']:12s} - Ranking promedio: {row['Ranking_Promedio']:4.1f}")
+    
+    # Probar rendimiento sin estas características
+    print(f"\n🧪 PRUEBA SIN LAS {len(caracteristicas_bajas)} CARACTERÍSTICAS MENOS IMPORTANTES:")
+    
+    # Obtener índices de características a mantener
+    caracteristicas_importantes = comparison_df[comparison_df['Ranking_Promedio'] <= umbral_ranking]['Característica'].tolist()
+    indices_importantes = [feature_names.index(feat) for feat in caracteristicas_importantes]
+    
+    # Entrenar modelo solo con características importantes
+    X_reduced = X_scaled[:, indices_importantes]
+    X_train_red, X_test_red, y_train_red, y_test_red = train_test_split(
+        X_reduced, y, test_size=0.2, random_state=42, stratify=y)
+    
+    rf_reduced = RandomForestClassifier(**rf_best_params, random_state=42)
+    rf_reduced.fit(X_train_red, y_train_red)
+    
+    # Evaluar rendimiento
+    y_pred_reduced = rf_reduced.predict(X_test_red)
+    accuracy_reduced = accuracy_score(y_test_red, y_pred_reduced)
+    accuracy_original = accuracy_score(y_test, rf_pred)
+    
+    print(f"Precisión con todas las características: {accuracy_original:.4f}")
+    print(f"Precisión con {len(caracteristicas_importantes)} características: {accuracy_reduced:.4f}")
+    print(f"Diferencia: {accuracy_reduced - accuracy_original:+.4f}")
+    
+    if accuracy_reduced >= accuracy_original - 0.01:  # Tolerancia del 1%
+        print("✅ Las características eliminadas NO son indispensables")
+        print(f"Características suficientes: {caracteristicas_importantes}")
+    else:
+        print("❌ Todas las características parecen ser importantes")
+else:
+    print("✅ Todas las características muestran importancia significativa")
+
+# 7. HEATMAP DE CORRELACIÓN CON IMPORTANCIAS
+print("\n7️⃣ MAPA DE CALOR - CORRELACIONES E IMPORTANCIAS:")
+print("-" * 50)
+
+# Crear correlación con target
+correlations = X.corrwith(y).abs().sort_values(ascending=False)
+correlation_df = pd.DataFrame({
+    'Característica': correlations.index,
+    'Correlación_Abs': correlations.values,
+    'Porcentaje_Corr': (correlations.values / correlations.sum()) * 100
+})
+
+plt.figure(figsize=(12, 8))
+# Matriz de correlación
+correlation_matrix = X.corr()
+mask = np.triu(np.ones_like(correlation_matrix, dtype=bool))
+sns.heatmap(correlation_matrix, mask=mask, annot=True, cmap='coolwarm', center=0,
+            square=True, fmt='.2f', cbar_kws={'label': 'Correlación'})
+plt.title('Matriz de Correlación entre Características')
+plt.tight_layout()
+plt.show()
+
+# Mostrar correlaciones con target
+print("Correlación absoluta con variable objetivo:")
+for i, row in correlation_df.iterrows():
+    print(f"{i+1:2d}. {row['Característica']:12s} - {row['Correlación_Abs']:.3f} ({row['Porcentaje_Corr']:5.2f}%)")
+
+print("\n" + "="*60)
+print("✅ ANÁLISIS COMPLETADO")
+print("="*60)
